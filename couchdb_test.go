@@ -20,10 +20,10 @@ func TestMain(m *testing.M) {
 	client = New(os.Getenv("COUCHDB_HOST_PORT"))
 
 	func() {
-		playground = client.Database("playground")
-		if exists, _ := playground.Exists(); !exists {
-			playground.Create()
+		if exists, _ := client.DB.Exists("playground"); !exists {
+			client.DB.Create("playground")
 		}
+		playground = client.Database("playground")
 
 		playground.Put("employee:michael", testDoc{
 			Name: "Michael",

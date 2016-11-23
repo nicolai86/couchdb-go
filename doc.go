@@ -23,6 +23,9 @@ func revision(etag string) string {
 
 // Get fetches a document identified by it's id. GET /{db}/{id}
 // this results in couchdb automatically returning the latest revision of the document
+//
+//  var doc couchdb.Document
+//  db.Get("some-id", &doc)
 func (d *Database) Get(id string, doc interface{}) error {
 	req, _ := http.NewRequest("GET", fmt.Sprintf("/%s", id), nil)
 	resp, err := d.Do(req)
@@ -44,6 +47,12 @@ func (d *Database) Get(id string, doc interface{}) error {
 }
 
 // Put creates or updates a document, returning the new revision. PUT /{db}/{id}
+//
+//  var doc = couchdb.Document{
+//    ID: "whatever",
+//    Rev: "1-62bc3c4d01e43ee9d0cead8cd7c76041",
+//  }
+//  db.Put(doc.ID, &doc)
 func (d *Database) Put(id string, doc interface{}) (string, error) {
 	bs, err := json.Marshal(doc)
 	if err != nil {
@@ -62,6 +71,7 @@ func (d *Database) Put(id string, doc interface{}) (string, error) {
 	return revision(resp.Header.Get("Etag")), nil
 }
 
+// Delete removes a document from a database
 func (d *Database) Delete(id, rev string) (string, error) {
 	req, _ := http.NewRequest("DELETE", fmt.Sprintf("/%s", id), nil)
 	values := req.URL.Query()

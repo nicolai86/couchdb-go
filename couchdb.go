@@ -10,10 +10,14 @@ import (
 
 // New returns a configured couchdb client
 func New(host string) *Client {
-	return &Client{
+	c := &Client{
 		host: host,
 		client: &http.Client{
 			Timeout: time.Duration(60 * time.Second),
 		},
 	}
+	c.DB = &db{
+		c: c,
+	}
+	return c
 }

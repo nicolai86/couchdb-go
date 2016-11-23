@@ -13,8 +13,8 @@ func TestDatabase_Put(t *testing.T) {
 	}
 
 	db := client.Database("put-test")
-	db.Create()
-	defer db.Destroy()
+	client.DB.Create(db.Name)
+	defer client.DB.Delete(db.Name)
 
 	t.Run("insert", func(t *testing.T) {
 		rev, err := db.Put(doc.ID, &doc)
@@ -43,8 +43,8 @@ func TestDatabase_Delete(t *testing.T) {
 	t.Parallel()
 
 	db := client.Database("delete-test")
-	db.Create()
-	defer db.Destroy()
+	client.DB.Create(db.Name)
+	defer client.DB.Delete(db.Name)
 
 	rev, _ := db.Put("test", Document{
 		ID: "test",

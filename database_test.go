@@ -6,7 +6,7 @@ func TestDatabase_NotExisting(t *testing.T) {
 	t.Parallel()
 
 	db := client.Database("foobar")
-	exists, err := db.Exists()
+	exists, err := client.DB.Exists(db.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -19,7 +19,7 @@ func TestDatabase_Exists(t *testing.T) {
 	t.Parallel()
 
 	db := client.Database("_replicator")
-	exists, err := db.Exists()
+	exists, err := client.DB.Exists(db.Name)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -28,16 +28,14 @@ func TestDatabase_Exists(t *testing.T) {
 	}
 }
 
-func TestDatabase_Create(t *testing.T) {
-	db := client.Database("new-db")
-	if err := db.Create(); err != nil {
+func TestClient_Create(t *testing.T) {
+	if err := client.DB.Create("new-db"); err != nil {
 		t.Fatal(err)
 	}
 }
 
-func TestDatabase_Destroy(t *testing.T) {
-	db := client.Database("new-db")
-	if err := db.Destroy(); err != nil {
+func TestClient_Delete(t *testing.T) {
+	if err := client.DB.Delete("new-db"); err != nil {
 		t.Fatal(err)
 	}
 }
