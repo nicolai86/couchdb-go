@@ -6,12 +6,14 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 )
 
 // Document contains basic document identifications
 type Document struct {
-	ID  string `json:"_id,omitempty"`
-	Rev string `json:"_rev,omitempty"`
+	ID      string `json:"_id,omitempty"`
+	Rev     string `json:"_rev,omitempty"`
+	Deleted bool   `json:"_deleted,omitempty"`
 }
 
 func revision(etag string) string {
@@ -19,6 +21,49 @@ func revision(etag string) string {
 		return ""
 	}
 	return etag[1 : len(etag)-1]
+}
+
+type AllDocOpts struct {
+	Limit       int
+	IncludeDocs bool
+	StartKey    string
+	EndKey      string
+}
+
+func (d *Database) AllDocs(opts AllDocOpts, results interface{}) error {
+	if opts.Limit == 0 {
+		opts.Limit = 100
+	}
+
+	req, _ := http.NewRequest("GET", "/_all_docs", nil)
+	values := req.URL.Query()
+	if opts.Limit == 0 {
+		opts.Limit = 100
+	}
+	values.Set("limit", strconv.Itoa(opts.Limit))
+	values.Set("include_docs", strconv.FormatBool(opts.IncludeDocs))
+	if opts.StartKey != "" {
+		values.Set("startkey", fmt.Sprintf("%q", opts.StartKey))
+	}
+	if opts.EndKey != "" {
+		values.Set("endkey", fmt.Sprintf("%q", opts.EndKey))
+	}
+	req.URL.RawQuery = values.Encode()
+
+	resp, err := d.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	data, err := ioutil.ReadAll(resp.Body)
+
+	if err != nil {
+		return err
+	}
+	if err := json.Unmarshal(data, &results); err != nil {
+		return err
+	}
+	return nil
 }
 
 // Get fetches a document identified by it's id. GET /{db}/{id}

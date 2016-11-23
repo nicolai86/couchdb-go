@@ -2,6 +2,90 @@ package couchdb
 
 import "testing"
 
+type playgroundResults struct {
+	Results
+	Rows []struct {
+		ID    string `json:"id"`
+		Value struct {
+			Document
+			Name string
+		} `json:"doc"`
+	} `json:"rows"`
+}
+
+func TestDatabase_AllDocs(t *testing.T) {
+	t.Parallel()
+
+	t.Run("include_docs", func(t *testing.T) {
+		var results playgroundResults
+		if err := playground.AllDocs(AllDocOpts{
+			IncludeDocs: true,
+			StartKey:    "employee:",
+			EndKey:      "employee:{}",
+		}, &results); err != nil {
+			t.Fatal(err)
+		}
+
+		for _, doc := range results.Rows {
+			if doc.Value.Name == "" {
+				t.Fatal("Expected doc to be included")
+			}
+		}
+	})
+
+	t.Run("startkey,endkey", func(t *testing.T) {
+		var results playgroundResults
+		if err := playground.AllDocs(AllDocOpts{
+			StartKey: "employee:",
+			EndKey:   "employee:{}",
+		}, &results); err != nil {
+			t.Fatal(err)
+		}
+		if len(results.Rows) != 2 {
+			t.Fatalf("Expected 2 rows, got %d", len(results.Rows))
+		}
+	})
+
+	t.Run("limit", func(t *testing.T) {
+		var results playgroundResults
+		if err := playground.AllDocs(AllDocOpts{
+			Limit: 2,
+		}, &results); err != nil {
+			t.Fatal(err)
+		}
+		if len(results.Rows) != 2 {
+			t.Fatalf("Expected 2 rows, got %d", len(results.Rows))
+		}
+	})
+
+	t.Run("simple", func(t *testing.T) {
+		var results playgroundResults
+		if err := playground.AllDocs(AllDocOpts{}, &results); err != nil {
+			t.Fatal(err)
+		}
+
+		if len(results.Rows) != 4 {
+			t.Fatalf("Expected 4 rows, got %d", len(results.Rows))
+		}
+
+		expected := []string{
+			"pet:yumi",
+			"employee:raphael",
+			"employee:michael",
+			"_design/company",
+		}
+		for _, id := range expected {
+			known := false
+			for _, d := range results.Rows {
+				known = known || d.ID == id
+			}
+			if !known {
+				t.Fatalf("Expected %q to be known, but wasn't", id)
+			}
+		}
+	})
+}
+
 func TestDatabase_Put(t *testing.T) {
 	t.Parallel()
 

@@ -5,7 +5,8 @@ import "testing"
 type employeeResults struct {
 	Results
 	Employees []struct {
-		Value testDoc `json:"value"`
+		Value Document `json:"value"`
+		Doc   testDoc  `json:"doc"`
 	} `json:"rows"`
 }
 
@@ -25,9 +26,25 @@ function(doc) {
 		},
 	})
 
+	t.Run("include_docs", func(t *testing.T) {
+		var result = employeeResults{}
+		if err := playground.Results("company", "employees", AllDocOpts{
+			IncludeDocs: true,
+			StartKey:    "employee:",
+			EndKey:      "employee:{}",
+		}, &result); err != nil {
+			t.Fatal(err)
+		}
+		for _, doc := range result.Employees {
+			if doc.Doc.Name == "" {
+				t.Fatal("Expected docs to be included, but weren't")
+			}
+		}
+	})
+
 	t.Run("get", func(t *testing.T) {
 		var result = employeeResults{}
-		if err := playground.Results("company", "employees", &result); err != nil {
+		if err := playground.Results("company", "employees", AllDocOpts{}, &result); err != nil {
 			t.Fatal(err)
 		}
 

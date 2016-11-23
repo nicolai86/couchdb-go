@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"strconv"
 )
 
 // Results is a struct meant to be embedded in a couchdb request struct with correct
@@ -32,8 +33,21 @@ type DesignDocument struct {
 	Views    map[string]View `json:"views"`
 }
 
-func (d *Database) Results(design, view string, result interface{}) error {
+func (d *Database) Results(design, view string, opts AllDocOpts, result interface{}) error {
 	req, _ := http.NewRequest("GET", fmt.Sprintf("/_design/%s/_view/%s", design, view), nil)
+	values := req.URL.Query()
+	if opts.Limit == 0 {
+		opts.Limit = 100
+	}
+	values.Set("limit", strconv.Itoa(opts.Limit))
+	values.Set("include_docs", strconv.FormatBool(opts.IncludeDocs))
+	if opts.StartKey != "" {
+		values.Set("startkey", fmt.Sprintf("%q", opts.StartKey))
+	}
+	if opts.EndKey != "" {
+		values.Set("endkey", fmt.Sprintf("%q", opts.EndKey))
+	}
+	req.URL.RawQuery = values.Encode()
 	resp, err := d.Do(req)
 	if err != nil {
 		return err
