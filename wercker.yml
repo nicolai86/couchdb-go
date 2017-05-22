@@ -1,0 +1,24 @@
+box: golang
+
+services:
+  - couchdb
+
+build:
+  steps:
+    - setup-go-workspace
+
+    - script:
+        name: go get
+        code: |
+          go get
+
+    - script:
+        name: go build
+        code: |
+          go build ./...
+
+    - script:
+        name: go test
+        code: |
+          export COUCHDB_HOST_PORT="http://$COUCHDB_PORT_5984_TCP_ADDR:$COUCHDB_PORT_5984_TCP_PORT"
+          go test ./...
