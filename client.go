@@ -11,7 +11,8 @@ type Client struct {
 	host   string
 	client *http.Client
 
-	DB *db
+	DB            *db
+	Authenticator Authentication
 }
 
 type db struct {
@@ -71,5 +72,12 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 
 	req.Header.Set("Content-Type", "application/json")
 
-	return c.client.Do(req)
+	if c.Authenticator != nil {
+		if err := c.Authenticator.Decorate(req); err != nil {
+			return nil, err
+		}
+	}
+
+	resp, err := c.client.Do(req)
+	return resp, err
 }
