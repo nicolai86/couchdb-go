@@ -4,6 +4,10 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+
+	"github.com/opentracing/opentracing-go"
+	"github.com/opentracing/opentracing-go/ext"
+	"github.com/opentracing/opentracing-go/log"
 )
 
 // Client contains all state necessary to identify a specific couchdb server
@@ -13,6 +17,7 @@ type Client struct {
 
 	DB            *db
 	Authenticator Authentication
+	tracer        opentracing.Tracer
 }
 
 type db struct {
@@ -70,6 +75,24 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 	u, _ := url.Parse(uri)
 	req.URL = u
 
+	parentSpan := opentracing.SpanFromContext(req.Context())
+	var span opentracing.Span
+	if parentSpan != nil {
+		span = c.tracer.StartSpan(
+			req.URL.Path,
+			opentracing.ChildOf(parentSpan.Context()),
+		)
+		span.SetTag(ext.SpanKindRPCClient.Key, ext.SpanKindRPCClient.Value)
+		vs := req.URL.Query()
+		if vs.Get("startkey") != "" {
+			span.SetTag("couch.startkey", vs.Get("startkey"))
+		}
+		if vs.Get("endkey") != "" {
+			span.SetTag("couch.endkey", vs.Get("endkey"))
+		}
+		defer span.Finish()
+	}
+
 	req.Header.Set("Content-Type", "application/json")
 
 	if c.Authenticator != nil {
@@ -79,5 +102,14 @@ func (c *Client) Do(req *http.Request) (*http.Response, error) {
 	}
 
 	resp, err := c.client.Do(req)
+	if err != nil {
+		if span != nil {
+			span.LogFields(log.String("error", err.Error()))
+		}
+		return nil, err
+	}
+	if span != nil {
+		span.LogFields(log.Int("response.status_code", resp.StatusCode))
+	}
 	return resp, err
 }
