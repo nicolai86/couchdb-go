@@ -22,6 +22,7 @@ func (f *Feed) Error() error {
 // FeedType describes supported couchdb change feeds
 type FeedType string
 
+// defines supported FeedType s
 const (
 	ContinuousFeed FeedType = "continuous"
 )
@@ -42,6 +43,7 @@ type Change struct {
 	Doc *json.RawMessage `json:"doc"`
 }
 
+// Subscribe spawns a goroutine used to continously pull data off a couchdb HTTP feed
 func (d *Database) Subscribe(ctx context.Context, opts FeedOpts) *Feed {
 	if opts.Type == "" {
 		opts.Type = ContinuousFeed

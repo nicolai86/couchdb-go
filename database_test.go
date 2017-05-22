@@ -1,3 +1,5 @@
+// +build !integration
+
 package couchdb
 
 import "testing"
@@ -5,26 +7,26 @@ import "testing"
 func TestDatabase_NotExisting(t *testing.T) {
 	t.Parallel()
 
-	db := client.Database("foobar")
-	exists, err := client.DB.Exists(db.Name)
+	dbName := "foobar"
+	exists, err := client.DB.Exists(dbName)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if exists {
-		t.Fatalf("Expected database %q to not exist, but does.", db.Name)
+		t.Fatalf("Expected database %q to not exist, but does.", dbName)
 	}
 }
 
 func TestDatabase_Exists(t *testing.T) {
 	t.Parallel()
 
-	db := client.Database("_replicator")
-	exists, err := client.DB.Exists(db.Name)
+	dbName := "_replicator"
+	exists, err := client.DB.Exists(dbName)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if !exists {
-		t.Fatalf("Expected database %q to exist, but didn't.", db.Name)
+		t.Fatalf("Expected database %q to exist, but didn't.", dbName)
 	}
 }
 

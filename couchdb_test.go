@@ -1,7 +1,11 @@
+// +build !integration
+
 package couchdb
 
 import (
+	"context"
 	"flag"
+	"fmt"
 	"os"
 	"testing"
 
@@ -31,13 +35,13 @@ func TestMain(m *testing.M) {
 		}
 		playground = client.Database("playground")
 
-		playground.Put("employee:michael", testDoc{
+		playground.Put(context.Background(), "employee:michael", testDoc{
 			Name: "Michael",
 		})
-		playground.Put("employee:raphael", testDoc{
+		playground.Put(context.Background(), "employee:raphael", testDoc{
 			Name: "Raphael",
 		})
-		playground.Put("pet:yumi", testDoc{
+		playground.Put(context.Background(), "pet:yumi", testDoc{
 			Name: "Yumi",
 		})
 	}()

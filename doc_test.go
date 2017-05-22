@@ -1,6 +1,11 @@
+// +build !integration
+
 package couchdb
 
-import "testing"
+import (
+	"context"
+	"testing"
+)
 
 type playgroundResults struct {
 	Results
@@ -18,7 +23,7 @@ func TestDatabase_AllDocs(t *testing.T) {
 
 	t.Run("include_docs", func(t *testing.T) {
 		var results playgroundResults
-		if err := playground.AllDocs(AllDocOpts{
+		if err := playground.AllDocs(context.Background(), AllDocOpts{
 			IncludeDocs: true,
 			StartKey:    "employee:",
 			EndKey:      "employee:{}",
@@ -35,7 +40,7 @@ func TestDatabase_AllDocs(t *testing.T) {
 
 	t.Run("startkey,endkey", func(t *testing.T) {
 		var results playgroundResults
-		if err := playground.AllDocs(AllDocOpts{
+		if err := playground.AllDocs(context.Background(), AllDocOpts{
 			StartKey: "employee:",
 			EndKey:   "employee:{}",
 		}, &results); err != nil {
@@ -48,7 +53,7 @@ func TestDatabase_AllDocs(t *testing.T) {
 
 	t.Run("limit", func(t *testing.T) {
 		var results playgroundResults
-		if err := playground.AllDocs(AllDocOpts{
+		if err := playground.AllDocs(context.Background(), AllDocOpts{
 			Limit: 2,
 		}, &results); err != nil {
 			t.Fatal(err)
@@ -60,7 +65,7 @@ func TestDatabase_AllDocs(t *testing.T) {
 
 	t.Run("simple", func(t *testing.T) {
 		var results playgroundResults
-		if err := playground.AllDocs(AllDocOpts{}, &results); err != nil {
+		if err := playground.AllDocs(context.Background(), AllDocOpts{}, &results); err != nil {
 			t.Fatal(err)
 		}
 
@@ -101,7 +106,7 @@ func TestDatabase_Put(t *testing.T) {
 	defer client.DB.Delete(db.Name)
 
 	t.Run("insert", func(t *testing.T) {
-		rev, err := db.Put(doc.ID, &doc)
+		rev, err := db.Put(context.Background(), doc.ID, &doc)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -113,7 +118,7 @@ func TestDatabase_Put(t *testing.T) {
 
 	t.Run("update", func(t *testing.T) {
 		doc.Name = "Klaus"
-		rev, err := db.Put(doc.ID, &doc)
+		rev, err := db.Put(context.Background(), doc.ID, &doc)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -130,10 +135,10 @@ func TestDatabase_Delete(t *testing.T) {
 	client.DB.Create(db.Name)
 	defer client.DB.Delete(db.Name)
 
-	rev, _ := db.Put("test", Document{
+	rev, _ := db.Put(context.Background(), "test", Document{
 		ID: "test",
 	})
-	rmRev, err := db.Delete("test", rev)
+	rmRev, err := db.Delete(context.Background(), "test", rev)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -151,7 +156,7 @@ func TestDatabase_Get(t *testing.T) {
 
 		docID := "_design/_auth"
 		var doc Document
-		err := db.Get(docID, &doc)
+		err := db.Get(context.Background(), docID, &doc)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -165,7 +170,7 @@ func TestDatabase_Get(t *testing.T) {
 		docID := "admin"
 		var doc Document
 
-		if err := db.Get(docID, &doc); err == nil {
+		if err := db.Get(context.Background(), docID, &doc); err == nil {
 			t.Fatal(err)
 		}
 	})
@@ -180,12 +185,12 @@ func TestDatabase_Rev(t *testing.T) {
 
 		docID := "_design/_auth"
 		var doc Document
-		err := db.Get(docID, &doc)
+		err := db.Get(context.Background(), docID, &doc)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		rev, err := db.Rev(docID)
+		rev, err := db.Rev(context.Background(), docID)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -197,7 +202,7 @@ func TestDatabase_Rev(t *testing.T) {
 		t.Parallel()
 
 		db := client.Database("_users")
-		if _, err := db.Rev("admin"); err == nil {
+		if _, err := db.Rev(context.Background(), "admin"); err == nil {
 			t.Fatal(err)
 		}
 	})

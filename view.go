@@ -1,11 +1,8 @@
 package couchdb
 
 import (
-	"encoding/json"
+	"context"
 	"fmt"
-	"io/ioutil"
-	"net/http"
-	"strconv"
 )
 
 // Results is a struct meant to be embedded in a couchdb request struct with correct
@@ -33,35 +30,7 @@ type DesignDocument struct {
 	Views    map[string]View `json:"views"`
 }
 
-func (d *Database) Results(design, view string, opts AllDocOpts, result interface{}) error {
-	req, _ := http.NewRequest("GET", fmt.Sprintf("/_design/%s/_view/%s", design, view), nil)
-	values := req.URL.Query()
-	if opts.Limit == 0 {
-		opts.Limit = 100
-	}
-	values.Set("limit", strconv.Itoa(opts.Limit))
-	values.Set("include_docs", strconv.FormatBool(opts.IncludeDocs))
-	if opts.StartKey != "" {
-		values.Set("startkey", fmt.Sprintf("%q", opts.StartKey))
-	}
-	if opts.EndKey != "" {
-		values.Set("endkey", fmt.Sprintf("%q", opts.EndKey))
-	}
-	req.URL.RawQuery = values.Encode()
-	resp, err := d.Do(req)
-	if err != nil {
-		return err
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("couchdb: GET %s returned %d", req.URL.Path, resp.StatusCode)
-	}
-	data, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return err
-	}
-	if err := json.Unmarshal(data, &result); err != nil {
-		return err
-	}
-	return nil
+// Results executes a request against a couchdb view
+func (d *Database) Results(ctx context.Context, design, view string, opts AllDocOpts, results interface{}) error {
+	return d.bulkGet(ctx, fmt.Sprintf("/_design/%s/_view/%s", design, view), opts, results)
 }

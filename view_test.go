@@ -1,6 +1,11 @@
+// +build !integration
+
 package couchdb
 
-import "testing"
+import (
+	"context"
+	"testing"
+)
 
 type employeeResults struct {
 	Results
@@ -11,7 +16,7 @@ type employeeResults struct {
 }
 
 func TestDatabase_Results(t *testing.T) {
-	playground.Put("_design/company", DesignDocument{
+	playground.Put(context.Background(), "_design/company", DesignDocument{
 		Language: "javascript",
 		Views: map[string]View{
 			"employees": {
@@ -28,10 +33,8 @@ function(doc) {
 
 	t.Run("include_docs", func(t *testing.T) {
 		var result = employeeResults{}
-		if err := playground.Results("company", "employees", AllDocOpts{
+		if err := playground.Results(context.Background(), "company", "employees", AllDocOpts{
 			IncludeDocs: true,
-			StartKey:    "employee:",
-			EndKey:      "employee:{}",
 		}, &result); err != nil {
 			t.Fatal(err)
 		}
@@ -44,7 +47,7 @@ function(doc) {
 
 	t.Run("get", func(t *testing.T) {
 		var result = employeeResults{}
-		if err := playground.Results("company", "employees", AllDocOpts{}, &result); err != nil {
+		if err := playground.Results(context.Background(), "company", "employees", AllDocOpts{}, &result); err != nil {
 			t.Fatal(err)
 		}
 
