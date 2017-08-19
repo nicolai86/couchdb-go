@@ -35,9 +35,34 @@ type NodeInfo struct {
 	Features []string `json:"features"`
 }
 
+// MembershipInfo contains couchdb 2.x membership information
+type MembershipInfo struct {
+	AllNodes     []string `json:"all_nodes"`
+	ClusterNodes []string `json:"cluster_nodes"`
+}
+
 // HasClusterSupport checks if couchdb 2.x is being used
 func (i NodeInfo) HasClusterSupport() bool {
 	return strings.HasPrefix(i.Version, "2")
+}
+
+// Membership looks up current clustering information for couchdb
+func (c *Client) Membership() (MembershipInfo, error) {
+	req, err := http.NewRequest("GET", "/_membership", nil)
+	if err != nil {
+		return MembershipInfo{}, err
+	}
+	resp, err := c.Do(req)
+	if err != nil {
+		return MembershipInfo{}, err
+	}
+	defer resp.Body.Close()
+	bs, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return MembershipInfo{}, err
+	}
+	m := MembershipInfo{}
+	return m, json.Unmarshal(bs, &m)
 }
 
 // Check retrieves information about the connected couchdb
