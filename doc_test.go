@@ -102,7 +102,7 @@ func TestDatabase_Put(t *testing.T) {
 	}
 
 	db := client.Database("put-test")
-	client.Databases.Create(db.Name)
+	client.Databases.Create(db.Name, DatabaseClusterOptions{})
 	defer client.Databases.Delete(db.Name)
 
 	t.Run("insert", func(t *testing.T) {
@@ -132,7 +132,7 @@ func TestDatabase_Delete(t *testing.T) {
 	t.Parallel()
 
 	db := client.Database("delete-test")
-	client.Databases.Create(db.Name)
+	client.Databases.Create(db.Name, DatabaseClusterOptions{})
 	defer client.Databases.Delete(db.Name)
 
 	rev, _ := db.Put(context.Background(), "test", Document{

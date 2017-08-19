@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
+	"strconv"
 )
 
 // DatabaseService exposes database management apis
@@ -12,11 +14,37 @@ type DatabaseService struct {
 	c *Client
 }
 
+// DefaultReplicaCount defines the default database replication count
+const DefaultReplicaCount = 3
+
+// DefaultShardCount defines the default database sharding count
+const DefaultShardCount = 8
+
+// DatabaseClusterOptions controls replication and sharding configuration for couchdb 2.x
+type DatabaseClusterOptions struct {
+	Replicas int
+	Shards   int
+}
+
 // Create creates a new database by calling PUT /{db}
-func (d *DatabaseService) Create(name string) error {
+func (d *DatabaseService) Create(name string, opts DatabaseClusterOptions) error {
 	req, err := http.NewRequest("PUT", fmt.Sprintf("/%s", name), nil)
 	if err != nil {
 		return err
+	}
+	if d.c.CouchDB.HasClusterSupport() {
+		vs := url.Values{}
+		replica := DefaultReplicaCount
+		if opts.Replicas != 0 {
+			replica = opts.Replicas
+		}
+		shards := DefaultShardCount
+		if opts.Shards != 0 {
+			shards = opts.Shards
+		}
+		vs.Set("n", strconv.Itoa(replica))
+		vs.Set("q", strconv.Itoa(shards))
+		req.URL.RawQuery = vs.Encode()
 	}
 
 	_, err = d.c.Do(req)

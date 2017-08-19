@@ -37,7 +37,7 @@ func TestMain(m *testing.M) {
 
 	func() {
 		if exists, _ := client.Databases.Exists("playground"); !exists {
-			client.Databases.Create("playground")
+			client.Databases.Create("playground", DatabaseClusterOptions{})
 		}
 		playground = client.Database("playground")
 

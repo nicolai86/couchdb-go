@@ -31,7 +31,7 @@ func TestDatabase_Exists(t *testing.T) {
 }
 
 func TestClient_Create(t *testing.T) {
-	if err := client.Databases.Create("new-db"); err != nil {
+	if err := client.Databases.Create("new-db", DatabaseClusterOptions{}); err != nil {
 		t.Fatal(err)
 	}
 }
