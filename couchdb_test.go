@@ -6,6 +6,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"testing"
@@ -26,7 +27,12 @@ func TestMain(m *testing.M) {
 		fmt.Println("Skipping couchdb tests as COUCHDB_HOST_PORT is not configured")
 		os.Exit(0)
 	}
-	c, _ := New(os.Getenv("COUCHDB_HOST_PORT"), &http.Client{})
+	auth := func(c *Client) error { return nil }
+	if os.Getenv("COUCHDB_USERNAME") != "" {
+		auth = WithBasicAuthentication(os.Getenv("COUCHDB_USERNAME"), os.Getenv("COUCHDB_PASSWORD"))
+	}
+
+	c, _ := New(os.Getenv("COUCHDB_HOST_PORT"), &http.Client{}, auth)
 	client = c
 
 	func() {
@@ -47,5 +53,9 @@ func TestMain(m *testing.M) {
 	}()
 
 	flag.Parse()
-	os.Exit(m.Run())
+	ret := m.Run()
+	if err := client.Databases.Delete("playground"); err != nil {
+		log.Fatalf("failed to delete test database: %v\n", err.Error())
+	}
+	os.Exit(ret)
 }
