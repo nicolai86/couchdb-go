@@ -112,9 +112,18 @@ type AdminUserService struct {
 	c *Client
 }
 
+// ClusterOptions allows the user to target different nodes in the cluster
+type ClusterOptions struct {
+	Node string
+}
+
 // Create adds a new administrative user
-func (c *AdminUserService) Create(ctx context.Context, name, password string) error {
-	req, err := http.NewRequest("PUT", fmt.Sprintf("/_config/admins/%s", name), strings.NewReader(fmt.Sprintf("%q", password)))
+func (c *AdminUserService) Create(ctx context.Context, name, password string, opts ClusterOptions) error {
+	path := fmt.Sprintf("/_config/admins/%s", name)
+	if c.c.CouchDB.HasClusterSupport() {
+		path = fmt.Sprintf("/_node/%s/_config/admins/%s", opts.Node, name)
+	}
+	req, err := http.NewRequest("PUT", path, strings.NewReader(fmt.Sprintf("%q", password)))
 	if err != nil {
 		return err
 	}
@@ -128,13 +137,17 @@ func (c *AdminUserService) Create(ctx context.Context, name, password string) er
 }
 
 // Update modifies an existimg administrative user
-func (c *AdminUserService) Update(ctx context.Context, name, password string) error {
-	return c.Create(ctx, name, password)
+func (c *AdminUserService) Update(ctx context.Context, name, password string, opts ClusterOptions) error {
+	return c.Create(ctx, name, password, opts)
 }
 
 // List fetches all administrative users
-func (c *AdminUserService) List(ctx context.Context) ([]string, error) {
-	req, err := http.NewRequest("GET", "/_config/admins", nil)
+func (c *AdminUserService) List(ctx context.Context, opts ClusterOptions) ([]string, error) {
+	path := "/_config/admins"
+	if c.c.CouchDB.HasClusterSupport() {
+		path = fmt.Sprintf("/_node/%s/_config/admins", opts.Node)
+	}
+	req, err := http.NewRequest("GET", path, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -160,8 +173,12 @@ func (c *AdminUserService) List(ctx context.Context) ([]string, error) {
 }
 
 // Delete removes an administrative user
-func (c *AdminUserService) Delete(ctx context.Context, name string) error {
-	req, err := http.NewRequest("DELETE", fmt.Sprintf("/_config/admins/%s", name), nil)
+func (c *AdminUserService) Delete(ctx context.Context, name string, opts ClusterOptions) error {
+	path := fmt.Sprintf("/_config/admins/%s", name)
+	if c.c.CouchDB.HasClusterSupport() {
+		path = fmt.Sprintf("/_node/%s/_config/admins/%s", opts.Node, name)
+	}
+	req, err := http.NewRequest("DELETE", path, nil)
 	if err != nil {
 		return err
 	}
