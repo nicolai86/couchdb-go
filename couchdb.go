@@ -27,5 +27,5 @@ func New(host string, client HTTPExecutor, configs ...func(*Client) error) (*Cli
 	c.Users = &UserService{c}
 	c.Replications = &ReplicationService{c}
 	c.Sessions = &SessionService{c}
-	return c, nil
+	return c, c.Check()
 }
