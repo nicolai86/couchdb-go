@@ -36,17 +36,14 @@ func (d *DatabaseService) Delete(name string) error {
 
 // DatabaseMeta contains ever changing meta data about a single database
 type DatabaseMeta struct {
-	Name                          string `json:"db_name"`
-	DocumentCount                 int    `json:"doc_count"`
-	DocumentDeletionCount         int    `json:"doc_del_count"`
-	UpdateSequenceNumber          int    `json:"update_seq"`
-	PurgeSequenceNumber           int    `json:"purge_seq"`
-	CompactRunning                bool   `json:"compact_running"`
-	DiskSize                      int    `json:"disk_size"`
-	DataSize                      int    `json:"data_size"`
-	InstanceStartTime             string `json:"instance_start_time"`
-	DiskFormatVersion             int    `json:"disk_format_version"`
-	CommittedUpdateSequenceNumber int    `json:"committed_update_seq"`
+	Name                  string `json:"db_name"`
+	DocumentCount         int    `json:"doc_count"`
+	DocumentDeletionCount int    `json:"doc_del_count"`
+	CompactRunning        bool   `json:"compact_running"`
+	DiskSize              int    `json:"disk_size"`
+	DataSize              int    `json:"data_size"`
+	InstanceStartTime     string `json:"instance_start_time"`
+	DiskFormatVersion     int    `json:"disk_format_version"`
 }
 
 // Meta looks up database metadata
