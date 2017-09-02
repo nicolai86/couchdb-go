@@ -26,6 +26,7 @@ type Client struct {
 	Admins        *AdminUserService
 	Replications  *ReplicationService
 	Sessions      *SessionService
+	Cluster       *ClusterService
 	Authenticator Authentication
 }
 
